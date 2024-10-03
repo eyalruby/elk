@@ -1,0 +1,26 @@
+cluster.name: "elasticsearch-cluster"
+
+node.name: ${CONTAINER_NAME}
+
+network.host: 0.0.0.0
+
+discovery.seed_hosts: ["elasticsearch-0", "elasticsearch-1"]
+cluster.initial_master_nodes: ["elasticsearch-0", "elasticsearch-1"]
+
+# discovery.type: single-node
+
+# Enable X-Pack security
+xpack.security.enabled: true
+
+# Enable encryption for HTTP API client connections, such as Kibana
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.keystore.path: certs/elasticsearch.p12
+xpack.security.http.ssl.truststore.path: certs/elasticsearch.p12
+xpack.security.http.ssl.verification_mode: none
+
+# Enable encryption and mutual authentication for node-to-node communication
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certs/elasticsearch.key
+xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certs/elasticsearch.crt
+# xpack.security.transport.ssl.certificate_authorities: /usr/share/elasticsearch/config/certs/ca.crt

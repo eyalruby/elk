@@ -1,0 +1,74 @@
+services:
+  elasticsearch-0:
+    image: elasticsearch:8.12.2
+    container_name: elasticsearch-0
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - CONTAINER_NAME=elasticsearch-0
+    volumes:
+      - elasticsearch-data-0:/usr/share/elasticsearch/data
+      - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./certs:/usr/share/elasticsearch/config/certs
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elastic
+
+  elasticsearch-1:
+    image: elasticsearch:8.12.2
+    container_name: elasticsearch-1
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - CONTAINER_NAME=elasticsearch-1
+    volumes:
+      - elasticsearch-data-1:/usr/share/elasticsearch/data
+      - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./certs:/usr/share/elasticsearch/config/certs
+    ports:
+      - 9201:9200
+      - 9301:9300
+    networks:
+      - elastic
+
+  init-elastic-users:
+    image: curlimages/curl:latest
+    container_name: init-elastic-users
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+    volumes:
+      - ./configs/init_users.sh:/tmp/init_users.sh
+    networks:
+      - elastic
+    entrypoint: ["/bin/sh", "-c", "/tmp/init_users.sh"]
+    depends_on:
+      - elasticsearch-0
+      - elasticsearch-1
+
+  kibana:
+    image: kibana:8.12.2
+    container_name: kibana
+    ports:
+      - 5601:5601
+    volumes:
+      - ./certs:/usr/share/kibana/config/certs
+      - ./configs/kibana.yml:/usr/share/kibana/config/kibana.yml
+    depends_on:
+      - elasticsearch-0
+      - elasticsearch-1
+      - init-elastic-users
+    networks:
+      - elastic
+
+volumes:
+  elasticsearch-data-0:
+    driver: local
+  elasticsearch-data-1:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge

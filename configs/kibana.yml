@@ -1,0 +1,19 @@
+server.name: kibana
+
+server:
+  name: ${HOSTNAME}
+  publicBaseUrl: 'https://kibana'
+  host: "0.0.0.0"
+  port: 5601
+  ssl.enabled: true
+  ssl.key: /usr/share/kibana/config/certs/elasticsearch.key
+  ssl.certificate: /usr/share/kibana/config/certs/elasticsearch.crt
+
+elasticsearch:
+  hosts: [ "https://elasticsearch-0:9200", "https://elasticsearch-1:9200" ]
+  username: kibana_system
+  password: kibana-pass
+  ssl.verificationMode: none
+  ssl.certificateAuthorities: [ "/usr/share/kibana/config/certs/ca.crt" ]
+
+monitoring.ui.container.elasticsearch.enabled: true

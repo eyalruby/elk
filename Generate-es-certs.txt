@@ -1,0 +1,36 @@
+# Step 1: Run a temporary Elasticsearch container
+- docker run --name es_temp_certs -it elasticsearch:8.12.2 /bin/bash
+
+# Step 2: Generate the Certificate Authority (CA) certificate
+- ./bin/elasticsearch-certutil ca --out config/certs/ca.p12 --pass ""
+
+# This generates a CA certificate that will be used to sign node certificates.
+
+# Step 3: Generate a node certificate for Elasticsearch with DNS and IPs
+- ./bin/elasticsearch-certutil cert --ca config/certs/ca.p12 --ca-pass "" --out config/certs/elasticsearch.p12 --pass "" --dns localhost --ip 127.0.0.1
+
+# This command generates a certificate for Elasticsearch, with localhost and 127.0.0.1 as SANs.
+
+# Step 4: Convert the .p12 certificate to .crt and .key using OpenSSL (optional)
+- openssl pkcs12 -in config/certs/elasticsearch.p12 -out config/certs/elasticsearch.crt -nokeys -passin pass:""
+- openssl pkcs12 -in config/certs/elasticsearch.p12 -out config/certs/elasticsearch.key -nocerts -nodes -passin pass:""
+
+# These commands extract the certificate (.crt) and the private key (.key) from the .p12 file.
+
+# Step 5: Extract the CA certificate from the .p12 file (optional)
+- openssl pkcs12 -in config/certs/ca.p12 -out config/certs/ca.crt -nokeys -passin pass:""
+
+# This command extracts the CA certificate from the .p12 file.
+
+# Step 6: Exit the temporary container
+- exit
+
+# Step 7: Copy the generated certificates from the container to your local machine
+- docker cp es_temp_certs:/usr/share/elasticsearch/config/certs ./certs
+
+# This command copies the certificates directory from the temporary container to your local machine.
+
+# Step 8: Remove the temporary container (optional)
+- docker rm es_temp_certs
+
+# This removes the temporary container after the certs are copied.
