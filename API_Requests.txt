@@ -1,0 +1,79 @@
+### Create Index with Mapping
+-X PUT https://localhost:9200/movies2  -d \
+'{ "mappings": 
+    { "properties": 
+        { "year": 
+            { "type": "date" } 
+        } 
+    } 
+}'
+
+### Show Index mappings ###
+-X GET https://localhost:9200/movies/_mapping
+
+### Bulk Upload
+-X PUT https://127.0.0.1:9200/_bulk -H "Content-Type: application/x-ndjson" --data-binary "@movies.json"
+
+### Update Partial Document ###
+-X POST "https://127.0.0.1:9200/movies/_update/<doc_id>?pretty" -d '{ "doc": { "year": "1999" } }'
+
+### Update Whole Document ###
+-X PUT "https://127.0.0.1:9200/movies/_doc/<doc_id>>?pretty" -d '{ "title": "Interstellar doron" }'
+
+### Search and Delete Document ###
+-X GET "https://127.0.0.1:9200/movies/_search?q=<field_value>&pretty"
+-X DELETE "https://localhost:9200/movies/_doc/<doc_id>?pretty" 
+
+### Search URI Query ###
+-X GET  "https://localhost:9201/movies/_search?q=+year:>1980+title:star%20wars&pretty"
+
+### Search Request Body Query ###
+-X GET "https://localhost:9201/movies/_search?pretty" -d \
+'{ "query": 
+    { "bool" : {
+        "must" : { "match_phrase" : { "title" : "Star Wars" } }, 
+        "filter" : { "range" : { "year" : { "gt" : 2000 } } }
+        }
+    }
+}'
+
+### Search With Pagination ###
+-X GET "https://localhost:9201/movies/_search?pretty" -d '
+{  
+        "from": 2,  
+        "size": 2,  
+        "query": { "match" : { "genre" : "Sci-Fi" } } 
+}'
+
+### Sort by Numeric ###
+-X GET "https://localhost:9200/movies/_search?sort=year&pretty"
+
+### Search Fuzzy Query ###
+-X GET "https://localhost:9200/movies/_search?pretty" -d '
+{
+    "query": {
+        "fuzzy": {
+            "title": { "value": "intersteller", "fuzziness": 2 }
+        }
+    }
+}'
+
+### Search Query With A Prefix ###
+-X GET "https://localhost:9200/movies/_search?pretty" -d '
+{ 
+    "query": {
+        "prefix": {
+            "year": "20"
+        }
+    }
+}'
+
+### Search Query With Wildcards ###
+-X GET "https://localhost:9200/movies/_search?pretty" -d '
+{ 
+    "query": {
+        "wildcard": {
+            "year": "1*"
+        }
+    }
+}'
