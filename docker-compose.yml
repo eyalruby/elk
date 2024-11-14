@@ -1,11 +1,12 @@
 services:
   elasticsearch-0:
-    image: elasticsearch:8.15.3
+    image: es-korraai:8.15.3
     container_name: elasticsearch-0
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Djava.security.manager -Djava.security.policy=/usr/share/elasticsearch/jdk/conf/security/plugin.policy"
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - CONTAINER_NAME=elasticsearch-0
+      - KORRA_HEB_URL="http://dicta:8000/lemmas"
     volumes:
       - elasticsearch-data-0:/usr/share/elasticsearch/data
       - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
@@ -17,12 +18,13 @@ services:
       - elastic
 
   elasticsearch-1:
-    image: elasticsearch:8.15.3
+    image: es-korraai:8.15.3
     container_name: elasticsearch-1
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Djava.security.manager -Djava.security.policy=/usr/share/elasticsearch/jdk/conf/security/plugin.policy"
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - CONTAINER_NAME=elasticsearch-1
+      - KORRA_HEB_URL="http://dicta:8000/lemmas"
     volumes:
       - elasticsearch-data-1:/usr/share/elasticsearch/data
       - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
@@ -60,6 +62,19 @@ services:
       - elasticsearch-0
       - elasticsearch-1
       - init-elastic-users
+    networks:
+      - elastic
+
+  dicta:
+    container_name: dicta
+    image: dicta-lemmatizer-offline:arm64_tag_v2
+    volumes:
+      - ./models/huggingface:/home/appuser/.cache/huggingface
+    ports:
+      - 8000:8000
+    depends_on:
+      - elasticsearch-0
+      - elasticsearch-1
     networks:
       - elastic
 
