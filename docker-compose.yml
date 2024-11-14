@@ -1,7 +1,8 @@
 services:
   elasticsearch-0:
-    image: es-korraai:8.15.3
+    image: korraai/elasticsearch:v1.1
     container_name: elasticsearch-0
+    privileged: true
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Djava.security.manager -Djava.security.policy=/usr/share/elasticsearch/jdk/conf/security/plugin.policy"
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
@@ -11,6 +12,15 @@ services:
       - elasticsearch-data-0:/usr/share/elasticsearch/data
       - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./certs:/usr/share/elasticsearch/config/certs
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
     ports:
       - 9200:9200
       - 9300:9300
@@ -18,8 +28,9 @@ services:
       - elastic
 
   elasticsearch-1:
-    image: es-korraai:8.15.3
+    image: korraai/elasticsearch:v1.1
     container_name: elasticsearch-1
+    privileged: true
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Djava.security.manager -Djava.security.policy=/usr/share/elasticsearch/jdk/conf/security/plugin.policy"
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
@@ -32,6 +43,15 @@ services:
     ports:
       - 9201:9200
       - 9301:9300
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
     networks:
       - elastic
 
@@ -50,20 +70,20 @@ services:
       - elasticsearch-0
       - elasticsearch-1
 
-  kibana:
-    image: kibana:8.15.3
-    container_name: kibana
-    ports:
-      - 5601:5601
-    volumes:
-      - ./certs:/usr/share/kibana/config/certs
-      - ./configs/kibana.yml:/usr/share/kibana/config/kibana.yml
-    depends_on:
-      - elasticsearch-0
-      - elasticsearch-1
-      - init-elastic-users
-    networks:
-      - elastic
+  # kibana:
+  #   image: kibana:8.15.3
+  #   container_name: kibana
+  #   ports:
+  #     - 5601:5601
+  #   volumes:
+  #     - ./certs:/usr/share/kibana/config/certs
+  #     - ./configs/kibana.yml:/usr/share/kibana/config/kibana.yml
+  #   depends_on:
+  #     - elasticsearch-0
+  #     - elasticsearch-1
+  #     - init-elastic-users
+  #   networks:
+  #     - elastic
 
   dicta:
     container_name: dicta
