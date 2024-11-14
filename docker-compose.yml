@@ -1,6 +1,6 @@
 services:
   elasticsearch-0:
-    image: korraai/elasticsearch:v1.1
+    image: elasticseach:8.15.3
     container_name: elasticsearch-0
     privileged: true
     environment:
@@ -28,7 +28,7 @@ services:
       - elastic
 
   elasticsearch-1:
-    image: korraai/elasticsearch:v1.1
+    image: elasticseach:8.15.3
     container_name: elasticsearch-1
     privileged: true
     environment:
@@ -70,33 +70,33 @@ services:
       - elasticsearch-0
       - elasticsearch-1
 
-  # kibana:
-  #   image: kibana:8.15.3
-  #   container_name: kibana
-  #   ports:
-  #     - 5601:5601
-  #   volumes:
-  #     - ./certs:/usr/share/kibana/config/certs
-  #     - ./configs/kibana.yml:/usr/share/kibana/config/kibana.yml
-  #   depends_on:
-  #     - elasticsearch-0
-  #     - elasticsearch-1
-  #     - init-elastic-users
-  #   networks:
-  #     - elastic
-
-  dicta:
-    container_name: dicta
-    image: dicta-lemmatizer-offline:arm64_tag_v2
-    volumes:
-      - ./models/huggingface:/home/appuser/.cache/huggingface
+  kibana:
+    image: kibana:8.15.3
+    container_name: kibana
     ports:
-      - 8000:8000
+      - 5601:5601
+    volumes:
+      - ./certs:/usr/share/kibana/config/certs
+      - ./configs/kibana.yml:/usr/share/kibana/config/kibana.yml
     depends_on:
       - elasticsearch-0
       - elasticsearch-1
+      - init-elastic-users
     networks:
       - elastic
+
+  # dicta:
+  #   container_name: dicta
+  #   image: dicta-lemmatizer-offline:arm64_tag_v2
+  #   volumes:
+  #     - ./models/huggingface:/home/appuser/.cache/huggingface
+  #   ports:
+  #     - 8000:8000
+  #   depends_on:
+  #     - elasticsearch-0
+  #     - elasticsearch-1
+  #   networks:
+  #     - elastic
 
 volumes:
   elasticsearch-data-0:
