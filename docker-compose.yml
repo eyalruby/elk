@@ -1,13 +1,12 @@
 services:
   elasticsearch-0:
-    image: elasticseach:8.15.3
+    image: elasticsearch:8.15.3
     container_name: elasticsearch-0
     privileged: true
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Djava.security.manager -Djava.security.policy=/usr/share/elasticsearch/jdk/conf/security/plugin.policy"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - CONTAINER_NAME=elasticsearch-0
-      - KORRA_HEB_URL="http://dicta:8000/lemmas"
     volumes:
       - elasticsearch-data-0:/usr/share/elasticsearch/data
       - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
@@ -28,14 +27,13 @@ services:
       - elastic
 
   elasticsearch-1:
-    image: elasticseach:8.15.3
+    image: elasticsearch:8.15.3
     container_name: elasticsearch-1
     privileged: true
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Djava.security.manager -Djava.security.policy=/usr/share/elasticsearch/jdk/conf/security/plugin.policy"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - CONTAINER_NAME=elasticsearch-1
-      - KORRA_HEB_URL="http://dicta:8000/lemmas"
     volumes:
       - elasticsearch-data-1:/usr/share/elasticsearch/data
       - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
@@ -85,24 +83,48 @@ services:
     networks:
       - elastic
 
-  # dicta:
-  #   container_name: dicta
-  #   image: dicta-lemmatizer-offline:arm64_tag_v2
-  #   volumes:
-  #     - ./models/huggingface:/home/appuser/.cache/huggingface
-  #   ports:
-  #     - 8000:8000
-  #   depends_on:
-  #     - elasticsearch-0
-  #     - elasticsearch-1
-  #   networks:
-  #     - elastic
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - elastic
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - elastic
+
+  elasticsearch_exporter:
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
+    container_name: elasticsearch_exporter
+    command:
+      - '--es.uri=https://elastic:elastic-pass@elasticsearch-0:9200'
+      - '--es.ssl-skip-verify'
+    restart: always
+    ports:
+    - "9114:9114" 
+    depends_on:
+      - elasticsearch-0
+      - elasticsearch-1
+    networks:
+      - elastic
 
 volumes:
   elasticsearch-data-0:
     driver: local
   elasticsearch-data-1:
     driver: local
+  grafana-storage: {}
 
 networks:
   elastic:
