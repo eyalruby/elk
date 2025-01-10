@@ -7,9 +7,13 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - CONTAINER_NAME=elasticsearch-0
+      - S3_ACCESS_KEY=fky0xVuZWYEhtd21FJeH
+      - S3_SECRET_KEY=ltDT4jiLu0vb8ifj5VZFIbfaOxnLSAVZBAxXyFp2
+    entrypoint: ["/bin/sh", "-c", "chmod +x /usr/local/bin/elastic-entrypoint.sh && /usr/local/bin/elastic-entrypoint.sh"]
     volumes:
       - elasticsearch-data-0:/usr/share/elasticsearch/data
       - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./configs/elastic-entrypoint.sh:/usr/local/bin/elastic-entrypoint.sh
       - ./certs:/usr/share/elasticsearch/config/certs
     ulimits:
       memlock:
@@ -34,9 +38,13 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - CONTAINER_NAME=elasticsearch-1
+      - S3_ACCESS_KEY=fky0xVuZWYEhtd21FJeH
+      - S3_SECRET_KEY=ltDT4jiLu0vb8ifj5VZFIbfaOxnLSAVZBAxXyFp2
+    entrypoint: ["/bin/sh", "-c", "chmod +x /usr/local/bin/elastic-entrypoint.sh && /usr/local/bin/elastic-entrypoint.sh"]
     volumes:
       - elasticsearch-data-1:/usr/share/elasticsearch/data
       - ./configs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./configs/elastic-entrypoint.sh:/usr/local/bin/elastic-entrypoint.sh
       - ./certs:/usr/share/elasticsearch/config/certs
     ports:
       - 9201:9200
@@ -83,48 +91,65 @@ services:
     networks:
       - elastic
 
-  grafana:
-    image: grafana/grafana-enterprise
-    container_name: grafana
-    restart: unless-stopped
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
     ports:
-      - '3000:3000'
+      - 9000:9000
+      - 9001:9001
+    command: minio server /data --console-address :9001
     volumes:
-      - grafana-storage:/var/lib/grafana
+      - minio-data:/data
+    environment:
+      - MINIO_ROOT_USER=root
+      - MINIO_ROOT_PASSWORD=root1234
     networks:
       - elastic
+    
+  # grafana:
+  #   image: grafana/grafana-enterprise
+  #   container_name: grafana
+  #   restart: unless-stopped
+  #   ports:
+  #     - '3000:3000'
+  #   volumes:
+  #     - grafana-storage:/var/lib/grafana
+  #   networks:
+  #     - elastic
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    networks:
-      - elastic
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - elastic
 
-  elasticsearch_exporter:
-    image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
-    container_name: elasticsearch_exporter
-    command:
-      - '--es.uri=https://elastic:elastic-pass@elasticsearch-0:9200'
-      - '--es.ssl-skip-verify'
-    restart: always
-    ports:
-    - "9114:9114" 
-    depends_on:
-      - elasticsearch-0
-      - elasticsearch-1
-    networks:
-      - elastic
+  # elasticsearch_exporter:
+  #   image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
+  #   container_name: elasticsearch_exporter
+  #   command:
+  #     - '--es.uri=https://elastic:elastic-pass@elasticsearch-0:9200'
+  #     - '--es.ssl-skip-verify'
+  #   restart: always
+  #   ports:
+  #   - "9114:9114" 
+  #   depends_on:
+  #     - elasticsearch-0
+  #     - elasticsearch-1
+  #   networks:
+  #     - elastic
 
 volumes:
   elasticsearch-data-0:
     driver: local
   elasticsearch-data-1:
     driver: local
-  grafana-storage: {}
+  # grafana-storage: {}
+  minio-data:
+    driver: local
 
 networks:
   elastic:

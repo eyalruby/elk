@@ -1,0 +1,71 @@
+PUT _snapshot/minio_repository
+{
+  "type": "s3",
+  "settings": {
+    "bucket": "elasticsearch-snapshots",
+    "endpoint": "http://minio:9000",
+    "protocol": "http",
+    "path_style_access": true
+  }
+}
+
+DELETE _snapshot/minio_repository
+
+PUT _slm/policy/dr_policy
+{
+  "schedule": "0 2 * * * ?", # Daily at 2 AM UTC
+  "name": "<dr-snap-{now/d}>",
+  "repository": "minio_repository",
+  "config": {
+    "indices": "*",
+    "include_global_state": true
+  },
+  "retention": {
+    "expire_after": "90d",
+    "min_count": 5,
+    "max_count": 15
+  }
+}
+
+PUT _slm/policy/data_only_policy
+{
+  "schedule": "0 3 * * * ?",  # Daily at 3 AM UTC
+  "name": "<data-only-snap-{now/d}>",
+  "repository": "minio_repository",
+  "config": {
+    "indices": ["kibana_sample_data_ecommerce", "logs-*"],
+    "include_global_state": false
+  },
+  "retention": {
+    "expire_after": "30d",
+    "min_count": 5,
+    "max_count": 30
+  }
+}
+
+POST _slm/policy/dr_policy/_execute
+
+POST _slm/policy/data_only_policy/_execute
+
+GET _snapshot/minio_repository/_all
+
+GET _slm/stats
+
+DELETE /kibana_sample_data_ecommerce
+
+GET /kibana_sample_data_ecommerce
+
+POST _snapshot/minio_repository/data-only-snap-2025.01.10-jfdag1qlszmz-jma66_7ca/_restore
+{
+  "indices": ["kibana_sample_data_ecommerce"],
+  "include_global_state": false
+}
+
+GET /_cat/indices/kibana_sample_data_ecommerce?v
+
+GET /kibana_sample_data_ecommerce/_search
+{
+  "size": 5
+}
+
+GET _cat/recovery

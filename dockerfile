@@ -1,5 +1,3 @@
-FROM elasticsearch:8.12.2
+FROM elasticsearch:8.15.3
 
-COPY ./elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
-
-ENV ES_JAVA_OPTS="-Xms512m -Xmx512m"
+RUN bin/elasticsearch-plugin install --batch repository-s3
