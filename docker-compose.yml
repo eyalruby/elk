@@ -9,6 +9,7 @@ services:
       - CONTAINER_NAME=elasticsearch-0
       - S3_ACCESS_KEY=fky0xVuZWYEhtd21FJeH
       - S3_SECRET_KEY=ltDT4jiLu0vb8ifj5VZFIbfaOxnLSAVZBAxXyFp2
+      - S3_ENDPOINT=elastic.co
     entrypoint: ["/bin/sh", "-c", "chmod +x /usr/local/bin/elastic-entrypoint.sh && /usr/local/bin/elastic-entrypoint.sh"]
     volumes:
       - elasticsearch-data-0:/usr/share/elasticsearch/data
@@ -40,6 +41,7 @@ services:
       - CONTAINER_NAME=elasticsearch-1
       - S3_ACCESS_KEY=fky0xVuZWYEhtd21FJeH
       - S3_SECRET_KEY=ltDT4jiLu0vb8ifj5VZFIbfaOxnLSAVZBAxXyFp2
+      - S3_ENDPOINT=elastic.co
     entrypoint: ["/bin/sh", "-c", "chmod +x /usr/local/bin/elastic-entrypoint.sh && /usr/local/bin/elastic-entrypoint.sh"]
     volumes:
       - elasticsearch-data-1:/usr/share/elasticsearch/data
