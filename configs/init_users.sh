@@ -23,3 +23,13 @@ curl -k -u elastic:$ELASTIC_PASSWORD -X POST "https://elasticsearch-0:9200/_secu
 }'
 
 echo "Kibana user created successfully!"
+
+# Apply analyzer license
+if [ -f /tmp/elasticsearch-analysis-hebrew-2025-02-09.license ]; then
+  curl -k -u elastic:$ELASTIC_PASSWORD -X PUT "https://elasticsearch-0:9200/_hebrew/license" \
+    -H "Content-Type: application/json" \
+    --data-binary @/tmp/elasticsearch-analysis-hebrew-2025-02-09.license
+  echo "License applied successfully!"
+else
+  echo "License file not found at /tmp/elasticsearch-analysis-hebrew-2025-02-09.license"
+fi
